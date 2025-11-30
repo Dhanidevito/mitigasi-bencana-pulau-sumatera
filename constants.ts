@@ -1,3 +1,4 @@
+
 import { DisasterType, RiskPoint } from './types';
 
 export const SUMATRA_CENTER: [number, number] = [-0.9492, 101.3485]; // Central Sumatra
@@ -13,6 +14,7 @@ export const MOCK_RISK_DATA: RiskPoint[] = [
     coords: { lat: 1.6666, lng: 101.4500 },
     severity: 'Critical',
     description: 'Hotspot detected in peatland area.',
+    lastOccurrence: '23 September 2023',
     details: {
       waterSources: [
         { lat: 1.6700, lng: 101.4600 },
@@ -27,6 +29,7 @@ export const MOCK_RISK_DATA: RiskPoint[] = [
     coords: { lat: -1.0500, lng: 103.3500 },
     severity: 'High',
     description: 'Active thermal anomaly near plantation.',
+    lastOccurrence: '15 Agustus 2023',
     details: {
       waterSources: [
         { lat: -1.0400, lng: 103.3600 }
@@ -41,6 +44,7 @@ export const MOCK_RISK_DATA: RiskPoint[] = [
     coords: { lat: -3.0160, lng: 104.7200 },
     severity: 'High',
     description: 'River level rising above threshold.',
+    lastOccurrence: '25 Desember 2024',
   },
   {
     id: 'fl2',
@@ -49,6 +53,7 @@ export const MOCK_RISK_DATA: RiskPoint[] = [
     coords: { lat: 5.0500, lng: 97.3100 },
     severity: 'Medium',
     description: 'Heavy rainfall accumulation predicted.',
+    lastOccurrence: '10 Januari 2024',
   },
   // LANDSLIDE (Tanah Longsor) - West Sumatra Highlands
   {
@@ -58,6 +63,7 @@ export const MOCK_RISK_DATA: RiskPoint[] = [
     coords: { lat: -0.4700, lng: 100.3700 },
     severity: 'Critical',
     description: 'Soil saturation critical along main road.',
+    lastOccurrence: '12 Mei 2024',
   },
   {
     id: 'l2',
@@ -66,6 +72,7 @@ export const MOCK_RISK_DATA: RiskPoint[] = [
     coords: { lat: -5.0300, lng: 104.0500 },
     severity: 'Medium',
     description: 'Unstable slope detected via satellite imagery.',
+    lastOccurrence: '05 Februari 2023',
   },
   // WAVE (Ombak Tinggi) - West Coast
   {
@@ -75,6 +82,7 @@ export const MOCK_RISK_DATA: RiskPoint[] = [
     coords: { lat: -1.5000, lng: 100.5000 },
     severity: 'High',
     description: 'Significant wave height > 4m predicted.',
+    lastOccurrence: '17 Oktober 2024',
   },
   {
     id: 'w2',
@@ -83,6 +91,7 @@ export const MOCK_RISK_DATA: RiskPoint[] = [
     coords: { lat: -5.1800, lng: 103.9300 },
     severity: 'High',
     description: 'Coastal erosion warning active.',
+    lastOccurrence: '22 Juli 2024',
   }
 ];
 

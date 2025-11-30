@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { RiskPoint, MitigationPlan } from '../types';
 import { generateMitigationPlan } from '../services/geminiService';
-import { AlertTriangle, Droplets, Mountain, Waves, Loader2, ShieldAlert, CheckCircle2, AlertOctagon, Info, Megaphone } from 'lucide-react';
+import { AlertTriangle, Droplets, Mountain, Waves, Loader2, CheckCircle2, AlertOctagon, Info, Megaphone, Calendar, MessageSquare } from 'lucide-react';
 
 interface InfoPanelProps {
   point: RiskPoint | null;
@@ -27,7 +27,10 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ point, onClose }) => {
 
   if (!point) {
     return (
-      <div className="h-full flex flex-col items-center justify-center text-gray-500 p-8 text-center">
+      <div className="h-full flex flex-col items-center justify-center text-gray-500 p-8 text-center bg-gray-900 md:bg-transparent md:rounded-none rounded-t-2xl">
+         {/* Mobile Handle */}
+         <div className="md:hidden w-12 h-1.5 bg-gray-700 rounded-full mb-8" onClick={onClose}></div>
+
         <div className="bg-gray-800 p-4 rounded-full mb-4">
           <Info size={32} className="text-blue-400" />
         </div>
@@ -56,9 +59,15 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ point, onClose }) => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-gray-900 text-white overflow-hidden">
+    <div className="h-full flex flex-col bg-gray-900 text-white overflow-hidden md:rounded-none rounded-t-2xl">
+      
+      {/* Mobile Handle */}
+      <div className="md:hidden w-full flex justify-center pt-3 pb-1 bg-gray-900 cursor-pointer" onClick={onClose}>
+         <div className="w-12 h-1.5 bg-gray-700 rounded-full hover:bg-gray-600 transition-colors"></div>
+      </div>
+
       {/* Header */}
-      <div className="p-6 border-b border-gray-800 flex-shrink-0 bg-gray-900/50">
+      <div className="p-6 pt-2 md:pt-6 border-b border-gray-800 flex-shrink-0 bg-gray-900/50">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <span className="p-2 bg-gray-800 rounded-lg">{getIcon()}</span>
@@ -69,13 +78,22 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ point, onClose }) => {
           <button onClick={onClose} className="text-gray-400 hover:text-white">&times;</button>
         </div>
         <h2 className="text-xl font-bold leading-tight">{point.locationName}</h2>
-        <div className="text-xs text-gray-400 mt-2 font-mono bg-black/20 p-2 rounded inline-block">
-          DATA SATELIT: {point.coords.lat.toFixed(4)}, {point.coords.lng.toFixed(4)}
+        
+        <div className="flex flex-wrap gap-2 mt-3">
+          <div className="text-xs text-gray-400 font-mono bg-black/20 p-1.5 rounded inline-flex items-center gap-1">
+            DATA SATELIT: {point.coords.lat.toFixed(4)}, {point.coords.lng.toFixed(4)}
+          </div>
+          {point.lastOccurrence && (
+            <div className="text-xs text-orange-300 font-sans bg-orange-900/20 border border-orange-500/20 p-1.5 rounded inline-flex items-center gap-1">
+              <Calendar size={12} />
+              Terakhir Terjadi: {point.lastOccurrence}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12 space-y-4">
             <Loader2 className="animate-spin text-emerald-500" size={32} />
@@ -88,6 +106,23 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ point, onClose }) => {
                 <h3 className="text-lg font-semibold text-emerald-400">{plan.title}</h3>
                 <p className="text-sm text-gray-400 mt-1 italic">"{plan.rawAnalysis}"</p>
              </div>
+
+            {/* Social Media News (NEW) */}
+            {plan.socialNews && plan.socialNews.length > 0 && (
+              <div className="bg-gray-800/50 rounded-lg p-3 border-l-4 border-blue-500">
+                <div className="flex items-center gap-2 mb-2 text-blue-400">
+                  <MessageSquare size={16} />
+                  <h3 className="font-bold text-xs uppercase tracking-wider">Update Media Sosial & Berita</h3>
+                </div>
+                <div className="space-y-2">
+                  {plan.socialNews.map((news, i) => (
+                    <div key={i} className="text-xs text-gray-300 italic bg-black/20 p-2 rounded">
+                      "{news}"
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* 1. Preventative (Before) */}
             <div>
@@ -105,7 +140,7 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ point, onClose }) => {
               </ul>
             </div>
 
-            {/* 2. During Disaster (NEW) */}
+            {/* 2. During Disaster */}
             <div className="bg-red-950/10 border border-red-500/20 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-3 text-red-400 animate-pulse">
                 <Megaphone size={18} />

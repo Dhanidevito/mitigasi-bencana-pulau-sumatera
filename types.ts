@@ -18,6 +18,8 @@ export interface RiskPoint {
   coords: Coordinates;
   severity: 'Low' | 'Medium' | 'High' | 'Critical';
   description: string;
+  lastOccurrence?: string; // Date string
+  source?: 'satellite' | 'simulation'; // New field to track data origin
   details?: {
     waterSources?: Coordinates[]; // For fires
     elevation?: number;
@@ -28,8 +30,9 @@ export interface RiskPoint {
 export interface MitigationPlan {
   title: string;
   preventativeMeasures: string[]; // Sebelum Bencana
-  duringDisasterActions: string[]; // Saat Bencana (NEW)
+  duringDisasterActions: string[]; // Saat Bencana
   immediateActions: string[]; // Tanggap Darurat / Setelah Bencana
   resourceAllocation: string;
   rawAnalysis: string;
+  socialNews: string[]; // Berita/Update Media Sosial
 }

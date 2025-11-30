@@ -2,8 +2,9 @@
 import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
+import { Plus, Minus, RotateCcw } from 'lucide-react';
 import { DisasterType, RiskPoint } from '../types';
-import { MOCK_RISK_DATA, SUMATRA_CENTER, DEFAULT_ZOOM, MAP_TILE_LAYER, MAP_ATTRIBUTION } from '../constants';
+import { SUMATRA_CENTER, DEFAULT_ZOOM, MAP_TILE_LAYER, MAP_ATTRIBUTION } from '../constants';
 
 // Removed the 'DefaultIcon' prototype override which can cause crashes in some environments.
 // We now explicitly use custom icons for all markers.
@@ -25,6 +26,7 @@ const WaterIcon = L.divIcon({
 });
 
 interface DisasterMapProps {
+  data: RiskPoint[];
   activeType: DisasterType;
   onSelectPoint: (point: RiskPoint) => void;
   selectedPointId?: string;
@@ -39,10 +41,54 @@ const MapUpdater: React.FC<{ center: [number, number] }> = ({ center }) => {
   return null;
 };
 
-const DisasterMap: React.FC<DisasterMapProps> = ({ activeType, onSelectPoint, selectedPointId }) => {
+// Custom Controls Component
+const MapControls = () => {
+  const map = useMap();
+
+  // Prevent click propagation to map so buttons work without clicking the map
+  const disablePropagation = (e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+  };
+
+  return (
+    <div 
+      className="absolute bottom-24 right-4 md:bottom-8 md:right-8 z-[1000] flex flex-col gap-3"
+      onMouseDown={disablePropagation}
+      onDoubleClick={disablePropagation}
+      onTouchStart={disablePropagation}
+    >
+      <div className="flex flex-col bg-gray-900/90 backdrop-blur border border-gray-700 rounded-xl overflow-hidden shadow-2xl">
+        <button 
+          onClick={() => map.zoomIn()}
+          className="p-3 text-gray-200 hover:bg-gray-800 hover:text-white border-b border-gray-700 transition-colors"
+          title="Perbesar (Zoom In)"
+        >
+          <Plus size={20} />
+        </button>
+        <button 
+          onClick={() => map.zoomOut()}
+          className="p-3 text-gray-200 hover:bg-gray-800 hover:text-white transition-colors"
+          title="Perkecil (Zoom Out)"
+        >
+          <Minus size={20} />
+        </button>
+      </div>
+
+      <button 
+        onClick={() => map.flyTo(SUMATRA_CENTER, DEFAULT_ZOOM, { duration: 1.5 })}
+        className="p-3 bg-emerald-900/90 backdrop-blur border border-emerald-700 rounded-xl hover:bg-emerald-800 text-emerald-100 shadow-2xl transition-colors flex items-center justify-center"
+        title="Reset Tampilan (Reset View)"
+      >
+        <RotateCcw size={20} />
+      </button>
+    </div>
+  );
+};
+
+const DisasterMap: React.FC<DisasterMapProps> = ({ data, activeType, onSelectPoint, selectedPointId }) => {
   
-  const filteredData = MOCK_RISK_DATA.filter(d => d.type === activeType);
-  const selectedPoint = MOCK_RISK_DATA.find(d => d.id === selectedPointId);
+  const filteredData = data.filter(d => d.type === activeType);
+  const selectedPoint = data.find(d => d.id === selectedPointId);
 
   const getColor = (type: DisasterType) => {
     switch (type) {
@@ -68,12 +114,14 @@ const DisasterMap: React.FC<DisasterMapProps> = ({ activeType, onSelectPoint, se
       center={SUMATRA_CENTER} 
       zoom={DEFAULT_ZOOM} 
       style={{ height: "100%", width: "100%", zIndex: 0, background: '#0f172a' }}
-      zoomControl={false}
+      zoomControl={false} // Disable default controls to use custom ones
     >
       <TileLayer
         url={MAP_TILE_LAYER}
         attribution={MAP_ATTRIBUTION}
       />
+
+      <MapControls />
 
       {filteredData.map((point) => (
         <React.Fragment key={point.id}>
