@@ -1,0 +1,7 @@
+{
+  "name": "mitigasi bencana pulau sumatera",
+  "description": "A GIS-based disaster mitigation platform for Sumatra, leveraging AI for risk analysis on forest fires, floods, landslides, and high waves.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
