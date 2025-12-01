@@ -3,7 +3,9 @@ export enum DisasterType {
   FIRE = 'FIRE',
   FLOOD = 'FLOOD',
   LANDSLIDE = 'LANDSLIDE',
-  WAVE = 'WAVE'
+  WAVE = 'WAVE',
+  VOLCANO = 'VOLCANO',
+  EARTHQUAKE = 'EARTHQUAKE'
 }
 
 export interface Coordinates {
@@ -19,11 +21,14 @@ export interface RiskPoint {
   severity: 'Low' | 'Medium' | 'High' | 'Critical';
   description: string;
   lastOccurrence?: string; // Date string
-  source?: 'satellite' | 'simulation'; // New field to track data origin
+  source?: 'satellite' | 'simulation' | 'agency_api'; // Updated source types
+  externalLink?: string; // URL to official report (BMKG/BNPB)
   details?: {
     waterSources?: Coordinates[]; // For fires
     elevation?: number;
     populationDensity?: string;
+    magnitude?: number; // For earthquakes
+    depth?: number; // For earthquakes
   }
 }
 
@@ -32,6 +37,7 @@ export interface MitigationPlan {
   preventativeMeasures: string[]; // Sebelum Bencana
   duringDisasterActions: string[]; // Saat Bencana
   immediateActions: string[]; // Tanggap Darurat / Setelah Bencana
+  survivalTips: string[]; // Tips Survival / Lifehacks Individu
   resourceAllocation: string;
   rawAnalysis: string;
   socialNews: string[]; // Berita/Update Media Sosial

@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { RiskPoint, MitigationPlan } from '../types';
 import { generateMitigationPlan } from '../services/geminiService';
-import { AlertTriangle, Droplets, Mountain, Waves, Loader2, CheckCircle2, AlertOctagon, Info, Megaphone, Calendar, MessageSquare } from 'lucide-react';
+import { AlertTriangle, Droplets, Mountain, Waves, Loader2, CheckCircle2, AlertOctagon, Info, Megaphone, Calendar, MessageSquare, Flame, ExternalLink, Activity, LifeBuoy } from 'lucide-react';
 
 interface InfoPanelProps {
   point: RiskPoint | null;
@@ -46,6 +46,8 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ point, onClose }) => {
       case 'FLOOD': return <Droplets className="text-blue-500" />;
       case 'LANDSLIDE': return <Mountain className="text-yellow-500" />;
       case 'WAVE': return <Waves className="text-cyan-500" />;
+      case 'VOLCANO': return <Flame className="text-orange-500" />;
+      case 'EARTHQUAKE': return <Activity className="text-purple-500" />;
     }
   };
 
@@ -56,6 +58,12 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ point, onClose }) => {
       case 'Medium': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50';
       default: return 'bg-blue-500/20 text-blue-400 border-blue-500/50';
     }
+  };
+
+  const getSourceLabel = () => {
+    if (point.source === 'agency_api') return 'VERIFIED AGENCY API';
+    if (point.source === 'satellite') return 'SATELLITE SENSOR';
+    return 'SIMULATION MODEL';
   };
 
   return (
@@ -74,6 +82,9 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ point, onClose }) => {
             <span className={`text-xs px-2 py-0.5 rounded border ${getSeverityColor(point.severity)}`}>
               {point.severity.toUpperCase()}
             </span>
+            <span className="text-[10px] bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded border border-gray-700">
+               {getSourceLabel()}
+            </span>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-white">&times;</button>
         </div>
@@ -86,8 +97,19 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ point, onClose }) => {
           {point.lastOccurrence && (
             <div className="text-xs text-orange-300 font-sans bg-orange-900/20 border border-orange-500/20 p-1.5 rounded inline-flex items-center gap-1">
               <Calendar size={12} />
-              Terakhir Terjadi: {point.lastOccurrence}
+              {point.lastOccurrence}
             </div>
+          )}
+          {point.externalLink && (
+            <a 
+              href={point.externalLink} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-xs text-blue-300 hover:text-white hover:underline font-sans bg-blue-900/20 border border-blue-500/20 p-1.5 rounded inline-flex items-center gap-1 transition-colors"
+            >
+              <ExternalLink size={12} />
+              Sumber Resmi
+            </a>
           )}
         </div>
       </div>
@@ -171,6 +193,24 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ point, onClose }) => {
                 ))}
               </ul>
             </div>
+
+            {/* 4. Survival Tips (Survival Kita) */}
+            {plan.survivalTips && plan.survivalTips.length > 0 && (
+              <div className="bg-emerald-950/20 border border-emerald-500/30 rounded-xl p-4 mt-4">
+                <div className="flex items-center gap-2 mb-3 text-emerald-400">
+                  <LifeBuoy size={18} />
+                  <h3 className="font-bold text-sm uppercase tracking-wider">Tips Survival & Lifehacks</h3>
+                </div>
+                <ul className="space-y-2">
+                  {plan.survivalTips.map((tip, i) => (
+                    <li key={i} className="flex gap-3 text-sm text-gray-200">
+                      <span className="text-emerald-500 mt-0.5">✓</span>
+                      {tip}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Resource Allocation */}
             <div className="bg-gray-800 rounded-lg p-4 text-xs">

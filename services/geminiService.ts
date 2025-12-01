@@ -12,35 +12,45 @@ export const generateMitigationPlan = async (riskPoint: RiskPoint): Promise<Miti
     ? `Terdapat sumber air terdekat di koordinat: ${riskPoint.details.waterSources.map(w => `[${w.lat}, ${w.lng}]`).join(', ')}.`
     : "Tidak ada data sumber air spesifik.";
 
+  // Format Context from Technical Details
+  let technicalContext = "";
+  if (riskPoint.details) {
+    if (riskPoint.details.magnitude) technicalContext += `Magnitudo Gempa: ${riskPoint.details.magnitude} SR. `;
+    if (riskPoint.details.depth) technicalContext += `Kedalaman: ${riskPoint.details.depth} km. `;
+  }
+
   const prompt = `
-    Anda adalah ahli mitigasi bencana senior dan analis GIS untuk wilayah Indonesia (Pulau Sumatera).
-    Berikan rencana mitigasi operasional dan taktis untuk situasi berikut:
+    Anda adalah ahli survival, SAR (Search and Rescue), dan analis GIS untuk wilayah Indonesia.
+    Berikan rencana mitigasi operasional DAN tips survival personal untuk situasi berikut:
     
+    SUMBER DATA: ${riskPoint.source === 'agency_api' ? "DATA RESMI PEMERINTAH (BMKG/BNPB) - TRUSTED" : "DATA SENSOR SATELIT - RAW"}
     Lokasi: ${riskPoint.locationName}
     Jenis Bencana: ${riskPoint.type}
     Koordinat Utama: ${riskPoint.coords.lat}, ${riskPoint.coords.lng}
     Tingkat Keparahan: ${riskPoint.severity}
     Data Lapangan: ${riskPoint.description}
+    Konteks Teknis: ${technicalContext}
     Terakhir Terjadi: ${riskPoint.lastOccurrence || "Tidak diketahui"}
     Info Logistik: ${waterSourcesInfo}
 
     Berikan output dalam format JSON valid (tanpa markdown code block) dengan struktur:
     {
       "title": "Judul Laporan Situasi (Bahasa Indonesia)",
-      "preventativeMeasures": ["Daftar 3-4 tindakan spesifik yang harus dilakukan SEBELUM bencana terjadi (Mitigasi Pencegahan)"],
-      "duringDisasterActions": ["Daftar 3-4 tindakan kritis yang harus dilakukan SAAT bencana sedang berlangsung (Respon Aktif)"],
-      "immediateActions": ["Daftar 3-4 tindakan pemulihan/evakuasi SETELAH puncak bencana (Tanggap Darurat Lanjutan)"],
-      "resourceAllocation": "Satu kalimat tegas mengenai alokasi alat berat, personel, atau logistik berdasarkan lokasi ini.",
-      "rawAnalysis": "Analisis geografis singkat (2 kalimat) mengenai pemicu bencana di titik koordinat ini.",
-      "socialNews": ["Buat 2-3 contoh headline berita pendek atau update media sosial (Twitter/Facebook) yang relevan dan realistis seolah-olah dilaporkan oleh warga/media lokal saat ini terkait bencana di lokasi tersebut."]
+      "preventativeMeasures": ["Daftar 3-4 tindakan spesifik pra-bencana"],
+      "duringDisasterActions": ["Daftar 3-4 tindakan kritis saat bencana"],
+      "immediateActions": ["Daftar 3-4 tindakan pemulihan pasca bencana"],
+      "survivalTips": ["Daftar 3-4 tips survival individu/lifehack praktis. Contoh: 'Gunakan filter air dari botol bekas', 'Teknik pernapasan 4-7-8 untuk panik', 'Cara sinyal SOS manual', dll."],
+      "resourceAllocation": "Satu kalimat tegas alokasi logistik.",
+      "rawAnalysis": "Analisis geografis singkat (2 kalimat).",
+      "socialNews": ["2-3 headline berita/sosmed fiktif tapi realistis."]
     }
     
     Instruksi Khusus:
-    1. Jika FIRE (Kebakaran): Wajib sebutkan cara pemanfaatan sumber air terdekat yang disebutkan di atas (jika ada) untuk pemadaman darurat.
-    2. Jika FLOOD (Banjir): Fokus pada rute evakuasi dan pompa air.
-    3. Jika LANDSLIDE (Longsor): Fokus pada penutupan jalan dan stabilisasi tanah.
-    4. Jika WAVE (Ombak): Fokus pada larangan melaut dan pengamanan pantai.
-    5. Social News harus terdengar lokal dan mendesak.
+    1. FIRE: Sertakan cara membuat masker basah darurat.
+    2. FLOOD: Sertakan cara membuat pelampung dari galon/botol bekas.
+    3. EARTHQUAKE: Sertakan 'Triangle of Life' vs 'Drop Cover Hold On' dan cara memukul pipa untuk sinyal.
+    4. VOLCANO: Sertakan cara melindungi mata dan paru-paru dari abu vulkanik tajam.
+    5. Tips survival harus bisa dilakukan oleh orang awam dengan alat seadanya.
   `;
 
   try {
@@ -64,6 +74,7 @@ export const generateMitigationPlan = async (riskPoint: RiskPoint): Promise<Miti
       preventativeMeasures: ["Periksa kesiapan alat peringatan dini.", "Lakukan simulasi evakuasi berkala."],
       duringDisasterActions: ["Ikuti arahan petugas lapangan.", "Cari tempat aman yang telah ditentukan."],
       immediateActions: ["Hubungi BPBD setempat segera."],
+      survivalTips: ["Tetap tenang dan jangan panik.", "Hemat air minum dan baterai ponsel.", "Dengarkan radio lokal untuk update."],
       resourceAllocation: "Data tidak tersedia.",
       rawAnalysis: "Koneksi ke sistem kecerdasan buatan terganggu.",
       socialNews: ["Tidak ada update media sosial saat ini."]

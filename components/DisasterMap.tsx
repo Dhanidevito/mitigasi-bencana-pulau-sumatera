@@ -96,6 +96,8 @@ const DisasterMap: React.FC<DisasterMapProps> = ({ data, activeType, onSelectPoi
       case DisasterType.FLOOD: return '#3b82f6'; // Blue
       case DisasterType.LANDSLIDE: return '#eab308'; // Yellow
       case DisasterType.WAVE: return '#06b6d4'; // Cyan
+      case DisasterType.VOLCANO: return '#ea580c'; // Orange-600
+      case DisasterType.EARTHQUAKE: return '#9333ea'; // Purple-600
       default: return '#ffffff';
     }
   };

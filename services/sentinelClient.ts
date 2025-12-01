@@ -1,4 +1,6 @@
 import fetch from 'node-fetch';
+// Fix: Import Buffer to ensure it is available and avoid TS errors
+import { Buffer } from 'buffer';
 
 const BASE = process.env.SH_BASE_URL!;
 const INSTANCE = process.env.SH_INSTANCE_ID!;

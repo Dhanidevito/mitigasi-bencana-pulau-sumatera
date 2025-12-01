@@ -92,6 +92,20 @@ export const MOCK_RISK_DATA: RiskPoint[] = [
     severity: 'High',
     description: 'Coastal erosion warning active.',
     lastOccurrence: '22 Juli 2024',
+  },
+  // EARTHQUAKE (Gempa Bumi) - Mentawai/Sumbar
+  {
+    id: 'e1',
+    locationName: 'Kep. Mentawai, Sumatera Barat',
+    type: DisasterType.EARTHQUAKE,
+    coords: { lat: -2.1333, lng: 99.4333 },
+    severity: 'High',
+    description: 'Gempa Tektonik Mag 5.8 (Simulasi).',
+    lastOccurrence: '01 Februari 2024',
+    details: {
+      magnitude: 5.8,
+      depth: 25
+    }
   }
 ];
 

@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { DisasterType, RiskPoint } from './types';
 import DisasterMap from './components/DisasterMap';
 import InfoPanel from './components/InfoPanel';
 import { fetchSatelliteData } from './services/satelliteService';
-import { Flame, CloudRain, Mountain, Waves, Map as MapIcon, Menu, Satellite, RefreshCw, WifiOff, Clock, Wifi } from 'lucide-react';
+import { Flame, CloudRain, Mountain, Waves, Map as MapIcon, Menu, Satellite, RefreshCw, WifiOff, Clock, Wifi, AlertTriangle, Activity } from 'lucide-react';
 
 // Connection Status Component for cleaner App code
 const ConnectionStatusIndicator: React.FC<{
@@ -74,7 +75,7 @@ const App: React.FC = () => {
     const [_, result] = await Promise.all([minLoadTime, dataPromise]);
     
     setRiskData(result.data);
-    setIsLive(result.source === 'satellite');
+    setIsLive(result.source === 'satellite' || result.source === 'agency_api');
     
     // Logic: Only show error if we are stuck on simulation AND there was an actual error
     // If we just fell back to simulation because there were no events, that's not an error.
@@ -112,6 +113,8 @@ const App: React.FC = () => {
     { type: DisasterType.FLOOD, label: 'Banjir', icon: <CloudRain size={20} />, color: 'bg-blue-500' },
     { type: DisasterType.LANDSLIDE, label: 'Longsor', icon: <Mountain size={20} />, color: 'bg-yellow-500' },
     { type: DisasterType.WAVE, label: 'Ombak Tinggi', icon: <Waves size={20} />, color: 'bg-cyan-500' },
+    { type: DisasterType.VOLCANO, label: 'Gunung Api', icon: <AlertTriangle size={20} />, color: 'bg-orange-600' },
+    { type: DisasterType.EARTHQUAKE, label: 'Gempa Bumi', icon: <Activity size={20} />, color: 'bg-purple-600' },
   ];
 
   return (

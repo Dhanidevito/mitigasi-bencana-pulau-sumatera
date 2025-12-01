@@ -2,6 +2,7 @@ import express, { RequestHandler } from 'express';
 import http from 'http';
 import { Server as WebSocketServer } from 'ws';
 import path from 'path';
+import fetch from 'node-fetch';
 import { getWmsUrl } from '../services/sentinelClient';
 
 const app = express();
@@ -39,8 +40,22 @@ app.get('/api/satellite/latest', (req, res) => {
   res.json(lastData);
 });
 
+// NEW: Proxy for BMKG (Indonesian Meteorology, Climatology, and Geophysics Agency)
+// Fetches latest 15 earthquakes (M > 5.0)
+app.get('/api/bmkg/quakes', async (req, res) => {
+  try {
+    const response = await fetch('https://data.bmkg.go.id/DataMKG/TEWS/gempaterkini.json');
+    if (!response.ok) throw new Error('Failed to fetch from BMKG');
+    const json = await response.json();
+    res.json(json);
+  } catch (err: any) {
+    console.error('BMKG Proxy Error:', err.message);
+    res.status(502).json({ error: 'Failed to fetch BMKG data' });
+  }
+});
+
 // Serve static if needed (optional)
-app.use('/static', express.static(path.join(__dirname, '..', 'public')) as RequestHandler);
+app.use('/static', express.static(path.resolve('public')) as RequestHandler);
 
 wss.on('connection', ws => {
   ws.send(JSON.stringify({ type: 'status', connected: true, lastData }));
