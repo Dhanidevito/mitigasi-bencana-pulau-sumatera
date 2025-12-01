@@ -4,6 +4,10 @@ import { DisasterType, RiskPoint } from './types';
 export const SUMATRA_CENTER: [number, number] = [-0.9492, 101.3485]; // Central Sumatra
 export const DEFAULT_ZOOM = 6;
 
+// Helper to get recent timestamp for simulation alerts
+const getRecentTime = (hoursAgo: number) => Date.now() - (hoursAgo * 60 * 60 * 1000);
+const getOldTime = (daysAgo: number) => Date.now() - (daysAgo * 24 * 60 * 60 * 1000);
+
 // Mock GIS Data (Simulating Satellite Identification)
 export const MOCK_RISK_DATA: RiskPoint[] = [
   // FIRE (Kebakaran Hutan) - Riau & Jambi areas
@@ -14,7 +18,8 @@ export const MOCK_RISK_DATA: RiskPoint[] = [
     coords: { lat: 1.6666, lng: 101.4500 },
     severity: 'Critical',
     description: 'Hotspot detected in peatland area.',
-    lastOccurrence: '23 September 2023',
+    lastOccurrence: 'Hari Ini',
+    timestamp: getRecentTime(2), // 2 Hours ago (triggers alert)
     details: {
       waterSources: [
         { lat: 1.6700, lng: 101.4600 },
@@ -30,6 +35,7 @@ export const MOCK_RISK_DATA: RiskPoint[] = [
     severity: 'High',
     description: 'Active thermal anomaly near plantation.',
     lastOccurrence: '15 Agustus 2023',
+    timestamp: getOldTime(90),
     details: {
       waterSources: [
         { lat: -1.0400, lng: 103.3600 }
@@ -45,6 +51,7 @@ export const MOCK_RISK_DATA: RiskPoint[] = [
     severity: 'High',
     description: 'River level rising above threshold.',
     lastOccurrence: '25 Desember 2024',
+    timestamp: getOldTime(5),
   },
   {
     id: 'fl2',
@@ -54,6 +61,7 @@ export const MOCK_RISK_DATA: RiskPoint[] = [
     severity: 'Medium',
     description: 'Heavy rainfall accumulation predicted.',
     lastOccurrence: '10 Januari 2024',
+    timestamp: getOldTime(20),
   },
   // LANDSLIDE (Tanah Longsor) - West Sumatra Highlands
   {
@@ -63,7 +71,8 @@ export const MOCK_RISK_DATA: RiskPoint[] = [
     coords: { lat: -0.4700, lng: 100.3700 },
     severity: 'Critical',
     description: 'Soil saturation critical along main road.',
-    lastOccurrence: '12 Mei 2024',
+    lastOccurrence: 'Hari Ini',
+    timestamp: getRecentTime(12), // 12 Hours ago (triggers alert)
   },
   {
     id: 'l2',
@@ -73,6 +82,7 @@ export const MOCK_RISK_DATA: RiskPoint[] = [
     severity: 'Medium',
     description: 'Unstable slope detected via satellite imagery.',
     lastOccurrence: '05 Februari 2023',
+    timestamp: getOldTime(200),
   },
   // WAVE (Ombak Tinggi) - West Coast
   {
@@ -83,6 +93,7 @@ export const MOCK_RISK_DATA: RiskPoint[] = [
     severity: 'High',
     description: 'Significant wave height > 4m predicted.',
     lastOccurrence: '17 Oktober 2024',
+    timestamp: getOldTime(60),
   },
   {
     id: 'w2',
@@ -92,6 +103,7 @@ export const MOCK_RISK_DATA: RiskPoint[] = [
     severity: 'High',
     description: 'Coastal erosion warning active.',
     lastOccurrence: '22 Juli 2024',
+    timestamp: getOldTime(100),
   },
   // EARTHQUAKE (Gempa Bumi) - Mentawai/Sumbar
   {
@@ -102,10 +114,25 @@ export const MOCK_RISK_DATA: RiskPoint[] = [
     severity: 'High',
     description: 'Gempa Tektonik Mag 5.8 (Simulasi).',
     lastOccurrence: '01 Februari 2024',
+    timestamp: getOldTime(30),
     details: {
       magnitude: 5.8,
       depth: 25
     }
+  },
+  // Historical Backup for Aceh Event (Older than 48h, so no alert, but visible)
+  {
+      id: 'backup-aceh-nov27',
+      locationName: 'Pidie Jaya, Aceh',
+      type: DisasterType.EARTHQUAKE,
+      coords: { lat: 5.2500, lng: 96.1667 },
+      severity: 'High',
+      description: 'Gempa Signifikan Aceh (Data Arsip).',
+      lastOccurrence: '27 November 2024',
+      timestamp: new Date('2024-11-27').getTime(),
+      source: 'BMKG',
+      externalLink: 'https://bmkg.go.id',
+      details: { magnitude: 5.3, depth: 10 }
   }
 ];
 

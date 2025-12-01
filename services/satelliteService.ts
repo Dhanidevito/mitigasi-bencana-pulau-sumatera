@@ -4,7 +4,7 @@ import { MOCK_RISK_DATA } from '../constants';
 
 const AGGREGATOR_URL = "/api/disasters/aggregate";
 const TIMEOUT_MS = 15000;
-const CACHE_KEY = "disaster_data_persistent_cache"; // Changed key for persistent storage
+const CACHE_KEY = "disaster_data_persistent_cache_v2"; // Versioned cache to invalidate old schemas
 const CACHE_DURATION_MS = 15 * 60 * 1000; // 15 Minutes for client side
 
 export interface SatelliteResponse {
@@ -17,11 +17,12 @@ export interface SatelliteResponse {
 // --- CACHE UTILS ---
 const getCache = (): SatelliteResponse | null => {
   try {
-    // Use localStorage instead of sessionStorage for offline persistence across sessions
     const cached = localStorage.getItem(CACHE_KEY);
     if (!cached) return null;
     const parsed = JSON.parse(cached);
-    // Even if expired, we might return it if offline, but here we just check validity
+    // Check if data is array to prevent crash from bad cache
+    if (!Array.isArray(parsed.data)) return null; 
+    
     if (Date.now() - new Date(parsed.lastChecked).getTime() < CACHE_DURATION_MS) {
       return { ...parsed, lastChecked: new Date(parsed.lastChecked) };
     }
@@ -31,6 +32,16 @@ const getCache = (): SatelliteResponse | null => {
 
 const setCache = (data: SatelliteResponse) => {
   try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch (e) {}
+};
+
+// --- SIMULATION FALLBACK GENERATOR ---
+const getSimulationData = (errorMsg: string): SatelliteResponse => {
+  return {
+    data: MOCK_RISK_DATA.map(d => ({...d, source: 'simulation'})),
+    source: 'simulation',
+    error: errorMsg,
+    lastChecked: new Date()
+  };
 };
 
 // --- MAIN FETCHER ---
@@ -43,23 +54,28 @@ export const fetchSatelliteData = async (): Promise<SatelliteResponse> => {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-    const response = await fetch(AGGREGATOR_URL, { signal: controller.signal });
+    const response = await fetch(AGGREGATOR_URL, { 
+      signal: controller.signal,
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
     clearTimeout(id);
+
+    // Check content type to avoid "Unexpected token <" error if 404/500 returns HTML
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+       throw new Error(`Invalid content-type from server: ${contentType}`);
+    }
 
     if (!response.ok) throw new Error(`Backend Error ${response.status}`);
 
     const json = await response.json();
     const livePoints: RiskPoint[] = json.data || [];
 
-    // Fallback to simulation if no live events
     if (livePoints.length === 0) {
       console.log("No live data returned from aggregator. Using simulation.");
-      const simResponse: SatelliteResponse = {
-        data: MOCK_RISK_DATA.map(d => ({...d, source: 'simulation'})),
-        source: 'simulation',
-        lastChecked: new Date()
-      };
-      return simResponse;
+      return getSimulationData("No live events found");
     }
 
     const result: SatelliteResponse = {
@@ -72,26 +88,25 @@ export const fetchSatelliteData = async (): Promise<SatelliteResponse> => {
     return result;
 
   } catch (error: any) {
-    console.error("Satellite Service Error:", error);
+    console.warn("Satellite Service Fetch Error:", error.message);
     
     // OFFLINE FALLBACK: Try to read stale cache from localStorage if network fails
     const staleCache = localStorage.getItem(CACHE_KEY);
     if (staleCache) {
-       console.log("Network failed, loading stale cache for offline mode.");
-       const parsed = JSON.parse(staleCache);
-       return { 
-         ...parsed, 
-         lastChecked: new Date(parsed.lastChecked),
-         error: "Offline Mode (Cached Data)" 
-       };
+       try {
+         const parsed = JSON.parse(staleCache);
+         if (Array.isArray(parsed.data)) {
+            console.log("Network failed, loading stale cache.");
+            return { 
+              ...parsed, 
+              lastChecked: new Date(parsed.lastChecked),
+              error: "Offline Mode (Cached Data)" 
+            };
+         }
+       } catch (e) {}
     }
 
     // Final Fallback: Simulation
-    return {
-      data: MOCK_RISK_DATA.map(d => ({...d, source: 'simulation'})),
-      source: 'simulation',
-      error: error.message || 'Connection failed',
-      lastChecked: new Date()
-    };
+    return getSimulationData(error.message || 'Connection failed');
   }
 };

@@ -20,7 +20,8 @@ export interface RiskPoint {
   coords: Coordinates;
   severity: 'Low' | 'Medium' | 'High' | 'Critical';
   description: string;
-  lastOccurrence?: string; // Date string
+  lastOccurrence?: string; // Human readable date string
+  timestamp?: number; // Raw epoch timestamp (ms) for time-based filtering
   source?: 'satellite' | 'simulation' | 'agency_api' | 'BMKG' | 'LAPAN' | 'SENTINEL' | 'LANDSAT' | 'USGS' | 'MODIS'; 
   externalLink?: string; // URL to official report (BMKG/BNPB)
   headlines?: string[];

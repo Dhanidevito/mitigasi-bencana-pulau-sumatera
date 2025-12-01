@@ -117,7 +117,16 @@ const App: React.FC = () => {
     setIsLive(result.source === 'satellite' || result.source === 'agency_api');
     
     // Detect Critical Alerts
-    const critical = result.data.filter(d => (d.riskScore && d.riskScore > 80) || d.severity === 'Critical');
+    // FILTER: Only show alerts for events in the last 48 HOURS to reduce noise
+    const FORTY_EIGHT_HOURS_MS = 48 * 60 * 60 * 1000;
+    const now = Date.now();
+    
+    const critical = result.data.filter(d => {
+       const isHighSeverity = (d.riskScore && d.riskScore > 80) || d.severity === 'Critical';
+       const isRecent = d.timestamp ? (now - d.timestamp < FORTY_EIGHT_HOURS_MS) : false;
+       return isHighSeverity && isRecent;
+    });
+
     if (critical.length > 0) {
        // Only update if different to prevent spamming
        setActiveAlerts(prev => {
@@ -125,6 +134,8 @@ const App: React.FC = () => {
          const oldIds = prev.map(c => c.id).join(',');
          return newIds !== oldIds ? critical : prev;
        });
+    } else {
+        setActiveAlerts([]);
     }
 
     if (result.error && result.source === 'simulation') {
