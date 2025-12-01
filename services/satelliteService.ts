@@ -103,7 +103,9 @@ export const fetchSatelliteData = async (): Promise<SatelliteResponse> => {
               error: "Offline Mode (Cached Data)" 
             };
          }
-       } catch (e) {}
+       } catch (e) {
+         console.warn("Failed to parse stale cache:", e);
+       }
     }
 
     // Final Fallback: Simulation
