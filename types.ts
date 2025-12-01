@@ -21,14 +21,26 @@ export interface RiskPoint {
   severity: 'Low' | 'Medium' | 'High' | 'Critical';
   description: string;
   lastOccurrence?: string; // Date string
-  source?: 'satellite' | 'simulation' | 'agency_api'; // Updated source types
+  source?: 'satellite' | 'simulation' | 'agency_api' | 'BMKG' | 'LAPAN' | 'SENTINEL' | 'LANDSAT' | 'USGS' | 'MODIS'; 
   externalLink?: string; // URL to official report (BMKG/BNPB)
+  headlines?: string[];
+  
+  // Data Fusion & Analytics
+  riskScore?: number; // 0-100 Calculated Risk Index
+  forecast?: string; // Weather prediction (NOAA/OpenMeteo)
+  impactDetails?: {
+    nearestCity?: string;
+    distanceKm?: number;
+    estimatedPopulationAffected?: string;
+  };
+
   details?: {
     waterSources?: Coordinates[]; // For fires
     elevation?: number;
     populationDensity?: string;
     magnitude?: number; // For earthquakes
     depth?: number; // For earthquakes
+    rainfall?: number; // mm/day
   }
 }
 

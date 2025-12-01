@@ -4,7 +4,7 @@ import { DisasterType, RiskPoint } from './types';
 import DisasterMap from './components/DisasterMap';
 import InfoPanel from './components/InfoPanel';
 import { fetchSatelliteData } from './services/satelliteService';
-import { Flame, CloudRain, Mountain, Waves, Map as MapIcon, Menu, Satellite, RefreshCw, WifiOff, Clock, Wifi, AlertTriangle, Activity } from 'lucide-react';
+import { Flame, CloudRain, Mountain, Waves, Map as MapIcon, Menu, Satellite, RefreshCw, WifiOff, Clock, Wifi, AlertTriangle, Activity, BellRing, X } from 'lucide-react';
 
 // Connection Status Component for cleaner App code
 const ConnectionStatusIndicator: React.FC<{
@@ -49,8 +49,46 @@ const ConnectionStatusIndicator: React.FC<{
           <span className="text-amber-500 font-medium">Error: {error}</span>
         )}
         <span className="text-gray-600 italic">
-          Source: {isLive ? 'NASA EONET' : 'Historical Archive'}
+          Source: {isLive ? 'NASA EONET/BMKG' : 'Historical Archive'}
         </span>
+      </div>
+    </div>
+  );
+};
+
+// New Alert Banner Component
+const AlertBanner: React.FC<{
+  alerts: RiskPoint[];
+  onDismiss: () => void;
+  onView: (point: RiskPoint) => void;
+}> = ({ alerts, onDismiss, onView }) => {
+  if (alerts.length === 0) return null;
+  
+  const current = alerts[0];
+  
+  return (
+    <div className="absolute top-20 left-1/2 -translate-x-1/2 md:top-4 z-[1200] w-[90%] md:w-auto max-w-lg animate-bounce-in">
+      <div className="bg-red-600/90 backdrop-blur-md border-l-4 border-white text-white p-4 rounded shadow-2xl flex items-start gap-3">
+        <div className="bg-white/20 p-2 rounded-full animate-ping-slow">
+           <BellRing size={20} />
+        </div>
+        <div className="flex-1">
+          <h4 className="font-bold text-sm uppercase tracking-wider flex items-center gap-2">
+            CRITICAL ALERT DETECTED
+            <span className="bg-white text-red-600 text-[10px] px-1 rounded font-extrabold">Risk Score: {current.riskScore}</span>
+          </h4>
+          <p className="text-xs mt-1 font-medium">{current.locationName} - {current.type}</p>
+          <p className="text-[10px] opacity-80 mt-1">{current.description}</p>
+          <button 
+             onClick={() => onView(current)}
+             className="mt-2 text-xs bg-white text-red-600 px-3 py-1 rounded font-bold hover:bg-red-50 transition-colors"
+          >
+            VIEW ANALYSIS
+          </button>
+        </div>
+        <button onClick={onDismiss} className="text-white/70 hover:text-white">
+          <X size={16} />
+        </button>
       </div>
     </div>
   );
@@ -61,6 +99,7 @@ const App: React.FC = () => {
   const [selectedPoint, setSelectedPoint] = useState<RiskPoint | null>(null);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [riskData, setRiskData] = useState<RiskPoint[]>([]);
+  const [activeAlerts, setActiveAlerts] = useState<RiskPoint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLive, setIsLive] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -77,8 +116,17 @@ const App: React.FC = () => {
     setRiskData(result.data);
     setIsLive(result.source === 'satellite' || result.source === 'agency_api');
     
-    // Logic: Only show error if we are stuck on simulation AND there was an actual error
-    // If we just fell back to simulation because there were no events, that's not an error.
+    // Detect Critical Alerts
+    const critical = result.data.filter(d => (d.riskScore && d.riskScore > 80) || d.severity === 'Critical');
+    if (critical.length > 0) {
+       // Only update if different to prevent spamming
+       setActiveAlerts(prev => {
+         const newIds = critical.map(c => c.id).join(',');
+         const oldIds = prev.map(c => c.id).join(',');
+         return newIds !== oldIds ? critical : prev;
+       });
+    }
+
     if (result.error && result.source === 'simulation') {
       setConnectionError(result.error);
     } else {
@@ -106,6 +154,8 @@ const App: React.FC = () => {
     if (window.innerWidth < 768) {
         setSidebarOpen(true); 
     }
+    // Remove from active alerts if viewed
+    setActiveAlerts(prev => prev.filter(a => a.id !== point.id));
   };
 
   const navItems = [
@@ -138,6 +188,16 @@ const App: React.FC = () => {
           activeType={activeType} 
           onSelectPoint={handleSelectPoint} 
           selectedPointId={selectedPoint?.id}
+        />
+
+        {/* Alert Banner */}
+        <AlertBanner 
+          alerts={activeAlerts} 
+          onDismiss={() => setActiveAlerts([])}
+          onView={(p) => {
+            setActiveType(p.type);
+            handleSelectPoint(p);
+          }}
         />
 
         {/* Connection Status Indicator */}

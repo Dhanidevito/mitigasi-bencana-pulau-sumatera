@@ -2,17 +2,15 @@ import express, { RequestHandler } from 'express';
 import http from 'http';
 import { Server as WebSocketServer } from 'ws';
 import path from 'path';
-import fetch from 'node-fetch';
 import { getWmsUrl } from '../services/sentinelClient';
+import { getAggregatedData } from './aggregator';
 
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
 let lastData: { wmsUrl?: string; imageTimestamp?: number } | null = null;
-
-// Example bbox for Sumatera area; adjust to your monitoring area
-const DEFAULT_BBOX = [95.0, -6.5, 106.0, 6.0]; // [minLon, minLat, maxLon, maxLat]
+const DEFAULT_BBOX = [95.0, -6.5, 106.0, 6.0];
 
 async function pollLoop() {
   const interval = Number(process.env.SAT_POLL_INTERVAL_MS) || 60000;
@@ -34,27 +32,31 @@ async function pollLoop() {
 
 app.use(express.json() as RequestHandler);
 
-// Proxy endpoint for frontend fallback polling
+// --- API ENDPOINTS ---
+
+// 1. Sentinel Visuals
 app.get('/api/satellite/latest', (req, res) => {
   if (!lastData) return res.status(503).json({ message: 'No data yet' });
   res.json(lastData);
 });
 
-// NEW: Proxy for BMKG (Indonesian Meteorology, Climatology, and Geophysics Agency)
-// Fetches latest 15 earthquakes (M > 5.0)
-app.get('/api/bmkg/quakes', async (req, res) => {
+// 2. MAIN AGGREGATOR ENDPOINT
+// Returns combined data from BMKG, LAPAN/NASA, Sentinel, USGS
+app.get('/api/disasters/aggregate', async (req, res) => {
   try {
-    const response = await fetch('https://data.bmkg.go.id/DataMKG/TEWS/gempaterkini.json');
-    if (!response.ok) throw new Error('Failed to fetch from BMKG');
-    const json = await response.json();
-    res.json(json);
+    const data = await getAggregatedData();
+    res.json({
+      success: true,
+      count: data.length,
+      timestamp: new Date().toISOString(),
+      data: data
+    });
   } catch (err: any) {
-    console.error('BMKG Proxy Error:', err.message);
-    res.status(502).json({ error: 'Failed to fetch BMKG data' });
+    console.error('Aggregator failed:', err.message);
+    res.status(500).json({ error: 'Failed to aggregate disaster data' });
   }
 });
 
-// Serve static if needed (optional)
 app.use('/static', express.static(path.resolve('public')) as RequestHandler);
 
 wss.on('connection', ws => {
